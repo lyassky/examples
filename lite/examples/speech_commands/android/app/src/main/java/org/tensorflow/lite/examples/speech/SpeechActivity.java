@@ -40,6 +40,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
@@ -53,7 +54,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.MappedByteBuffer;
@@ -65,6 +69,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import org.tensorflow.lite.Interpreter;
+
 
 /**
  * An activity that listens for audio and then uses a TensorFlow model to detect particular classes,
@@ -95,7 +100,7 @@ public class SpeechActivity extends Activity
   // Working variables.
   short[] recordingBuffer = new short[RECORDING_LENGTH];
   int recordingOffset = 0;
-  boolean shouldContinue = true;
+  boolean shouldContinue = false; //changed to false, going to only start recording if between start/stop
   private Thread recordingThread;
   boolean shouldContinueRecognition = true;
   private Thread recognitionThread;
@@ -107,6 +112,9 @@ public class SpeechActivity extends Activity
   private LinearLayout bottomSheetLayout;
   private LinearLayout gestureLayout;
   private BottomSheetBehavior sheetBehavior;
+  private List<Integer> tally = new ArrayList<>(); // list of counts for how many times each word was said, indexed as words are shown on screen
+  private List<Float> silenceTimeStamps = new ArrayList<>(); // pairs of timestamps (time silence started, time silence ended)
+
 
   private Interpreter tfLite;
   private ImageView bottomSheetArrowImageView;
@@ -187,10 +195,8 @@ public class SpeechActivity extends Activity
     tfLite.resizeInput(0, new int[] {RECORDING_LENGTH, 1});
     tfLite.resizeInput(1, new int[] {1});
 
-    // Start the recording and recognition threads.
-    requestMicrophonePermission();
-    startRecording();
-    startRecognition();
+  //this is where the start recording used to be before it had specific start/stop constraint
+
 
     sampleRateTextView = findViewById(R.id.sample_rate);
     inferenceTimeTextView = findViewById(R.id.inference_info);
@@ -216,6 +222,11 @@ public class SpeechActivity extends Activity
     goTextView = findViewById(R.id.go);
 
     apiSwitchCompat.setOnCheckedChangeListener(this);
+
+    //initialize the tally arraylist with 8 empty
+    for (int i = 0; i < 10; i++) {
+      tally.add(0);
+    }
 
     ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
     vto.addOnGlobalLayoutListener(
@@ -283,6 +294,21 @@ public class SpeechActivity extends Activity
     }
   }
 
+
+  // set OnClickListener for the start button to signal that the
+  btnStart.setOnClickListener(){
+    // Start the recording and recognition threads.
+    requestMicrophonePermission();
+    startRecording();
+    startRecognition();
+    }
+  btnStop.setOnClickListener(){
+    // Stop the recording and recognition threads.
+    stopRecording();
+    stopRecognition();
+  }
+
+
   public synchronized void startRecording() {
     if (recordingThread != null) {
       return;
@@ -303,9 +329,88 @@ public class SpeechActivity extends Activity
     if (recordingThread == null) {
       return;
     }
+
+    //CSV FILE 1: writing the csv file that records the tally data
+    try {
+      File root = Environment.getExternalStorageDirectory();
+      File file1 = new File(root, "speechResults.csv");
+      //File file = new File( "speechResults.csv");
+      if (!file1.exists()) {  // if file doesnt exists, then create it
+        file1.createNewFile();
+      }
+
+      FileWriter fw = new FileWriter(file1.getAbsoluteFile());
+      BufferedWriter bw = new BufferedWriter(fw);
+
+      //fill in content to be written (aka, parsed tally arraylist with appropriate labelings)
+      // yes no up down left right on off stop go
+
+
+      String line0 = String.format("%s,%d\n", "Yes: ", tally.get(0));
+      bw.write(line0);
+      String line1 = String.format("%s,%d\n", "No: ", tally.get(0));
+      bw.write(line1);
+      String line2 = String.format("%s,%d\n", "Up: ", tally.get(0));
+      bw.write(line2);
+      String line3 = String.format("%s,%d\n", "Down: ", tally.get(0));
+      bw.write(line3);
+      String line4 = String.format("%s,%d\n", "Left: ", tally.get(0));
+      bw.write(line4);
+      String line5 = String.format("%s,%d\n", "Right: ", tally.get(0));
+      bw.write(line5);
+      String line6 = String.format("%s,%d\n", "On: ", tally.get(0));
+      bw.write(line6);
+      String line7 = String.format("%s,%d\n", "Off: ", tally.get(0));
+      bw.write(line7);
+      String line8 = String.format("%s,%d\n", "Stop: ", tally.get(0));
+      bw.write(line8);
+      String line9 = String.format("%s,%d\n", "Go: ", tally.get(0));
+      bw.write(line9);
+
+      bw.close();
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    //CSV FILE 2: writing the csv file that records the silence data.
+    //File Format:
+    //  listed as sets of two time stamps
+    //  first time stamp is when the patient stopped talking, second is when they resume again
+
+    try {
+      File root = Environment.getExternalStorageDirectory();
+      File file2 = new File(root, "silenceResults.csv");
+      //File file = new File( "speechResults.csv");
+      if (!file2.exists()) {  // if file doesnt exists, then create it
+        file2.createNewFile();
+      }
+      FileWriter fw = new FileWriter(file2.getAbsoluteFile());
+      BufferedWriter bw = new BufferedWriter(fw);
+
+      boolean continueTimeStamps = true;
+      while (continueTimeStamps){
+        for (int i = 0; i++; i<silenceTimeStamps.length){
+          //TODO: iterate through time stamps and print in %f,%f formatting, write to file using bw.write
+        }
+      }
+
+
+      bw.write(content);  //TODO: fill in content to be written (aka, timestamp pairs labelings)
+      bw.close();
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+
+
     shouldContinue = false;
     recordingThread = null;
   }
+
+
+
 
   private void record() {
     android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO);
@@ -441,6 +546,10 @@ public class SpeechActivity extends Activity
                 for (int i = 0; i < labels.size(); ++i) {
                   if (labels.get(i).equals(result.foundCommand)) {
                     labelIndex = i;
+                    tally.set(i, tally.get(i) + 1); //setting the tally for each result up one if it is in foundCommand
+                    Log.d("TALLY", Integer.toString(i));
+                    //write csv file
+
                   }
                 }
 

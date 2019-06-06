@@ -123,13 +123,50 @@
         </LinearLayout>
     </RelativeLayout>
 
+    <!-- TODO(b/112541284): Unhide when new NNAPI delegate is used. -->
     <View
         android:layout_width="match_parent"
         android:layout_height="1px"
         android:layout_marginTop="10dp"
         android:background="@android:color/darker_gray" />
 
-    <!-- TODO(b/112541284): Unhide when new NNAPI delegate is used. -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="91dp"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnStart"
+            android:layout_width="100dp"
+            android:layout_height="90dp"
+            android:text="@string/start" />
+
+        <Button
+            android:id="@+id/btnStop"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="20dp"
+            android:layout_toEndOf="@+id/btnStart"
+            android:text="@string/stop"/>
+
+
+        <Button
+            android:id="@+id/btnResults"
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="20dp"
+            android:layout_toEndOf="@+id/btnStop"
+            android:text="View Results" />
+
+        <View
+            android:id="@+id/view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+
+    </RelativeLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
