@@ -9,6 +9,10 @@ This a fork of the TensorFlow example repo. Edits and additional features made b
 * records the number of times each word is said and outputs to CSV file
 * records the pauses (silence) in speech and records the start and stop time of each pause in a CSV file
 
+See below for 
+* how to build the demo using Android Studio
+* detailed description of files
+* notes on executing
 
 <!-- TODO(b/124116863): Add app screenshot. -->
 
