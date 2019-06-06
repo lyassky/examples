@@ -138,6 +138,7 @@ public class RecognizeCommands {
     // bail.
     final long earliestTime = previousResults.getFirst().first;
     final long samplesDuration = currentTimeMS - earliestTime;
+    //TODO:
 
     Log.v("Number of Results: ", String.valueOf(howManyResults));
 
@@ -177,8 +178,13 @@ public class RecognizeCommands {
     // If we've recently had another label trigger, assume one that occurs too
     // soon afterwards is a bad result.
     long timeSinceLastTop;
+
+        //TODO: if currentTopLabel is SILENCE_LABEL, then return PreviousTopLabelTime
+        //TODO: (or another time label) to currentTimeMS as a period of time, or do the
+        //TODO: difference between them and log that as a period of SILENCE
+
     if (previousTopLabel.equals(SILENCE_LABEL) || (previousTopLabelTime == Long.MIN_VALUE)) {
-      timeSinceLastTop = Long.MAX_VALUE;
+      timeSinceLastTop = Long.MAX_VALUE; //huge number (9,223,372,036,854,775,807)
     } else {
       timeSinceLastTop = currentTimeMS - previousTopLabelTime;
     }
