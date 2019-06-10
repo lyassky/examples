@@ -49,6 +49,7 @@ import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -118,7 +119,8 @@ public class SpeechActivity extends Activity
 
   private Interpreter tfLite;
   private ImageView bottomSheetArrowImageView;
-
+  private Button btnStop;
+  private Button btnStart;
   private TextView yesTextView,
       noTextView,
       upTextView,
@@ -221,6 +223,31 @@ public class SpeechActivity extends Activity
     stopTextView = findViewById(R.id.stop);
     goTextView = findViewById(R.id.go);
 
+    // set BtnStart, BtnStop
+    // set button onclick listeners
+    /////////
+
+    // set OnClickListener for the start button to signal that the
+
+    final Button btnStart = (Button) findViewById(R.id.btnStart);
+    btnStart.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        // Start the recording and recognition threads.
+        requestMicrophonePermission();
+        startRecording();
+        startRecognition();}
+    });
+
+    final Button btnStop = (Button) findViewById(R.id.btnStop);
+    btnStart.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        // Start the recording and recognition threads.
+        stopRecording();
+        stopRecognition();
+      }
+    });
+    /////////
+
     apiSwitchCompat.setOnCheckedChangeListener(this);
 
     //initialize the tally arraylist with 8 empty
@@ -295,18 +322,6 @@ public class SpeechActivity extends Activity
   }
 
 
-  // set OnClickListener for the start button to signal that the
-  btnStart.setOnClickListener(){
-    // Start the recording and recognition threads.
-    requestMicrophonePermission();
-    startRecording();
-    startRecognition();
-    }
-  btnStop.setOnClickListener(){
-    // Stop the recording and recognition threads.
-    stopRecording();
-    stopRecognition();
-  }
 
 
   public synchronized void startRecording() {
@@ -377,7 +392,6 @@ public class SpeechActivity extends Activity
     //File Format:
     //  listed as sets of two time stamps
     //  first time stamp is when the patient stopped talking, second is when they resume again
-
     try {
       File root = Environment.getExternalStorageDirectory();
       File file2 = new File(root, "silenceResults.csv");
@@ -388,26 +402,24 @@ public class SpeechActivity extends Activity
       FileWriter fw = new FileWriter(file2.getAbsoluteFile());
       BufferedWriter bw = new BufferedWriter(fw);
 
-      boolean continueTimeStamps = true;
-      while (continueTimeStamps){
-        for (int i = 0; i++; i<silenceTimeStamps.length){
+//      boolean continueTimeStamps = true;
+  //    while (continueTimeStamps) {
+        int i = 0;
+        while (i<silenceTimeStamps.size()) {
           //TODO: iterate through time stamps and print in %f,%f formatting, write to file using bw.write
+          String lineToWrite = String.format("%s,%d,%s,%d\n", "Silence between periods: ", silenceTimeStamps.get(i), ", ", silenceTimeStamps.get(i + 1));
+          bw.write(lineToWrite); //TODO: fill in content to be written (aka, timestamp pairs labelings)
+          bw.close();
+          i = i + 2;
         }
-      }
-
-
-      bw.write(content);  //TODO: fill in content to be written (aka, timestamp pairs labelings)
-      bw.close();
-
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-
+  //   }
+      } catch (IOException e) {
+          e.printStackTrace();
+        }
 
     shouldContinue = false;
     recordingThread = null;
-  }
+    }
 
 
 
