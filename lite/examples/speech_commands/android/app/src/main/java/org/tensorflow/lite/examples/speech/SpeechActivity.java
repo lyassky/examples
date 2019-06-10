@@ -423,17 +423,19 @@ public class SpeechActivity extends Activity
       }
       FileWriter fw = new FileWriter(file2.getAbsoluteFile());
       BufferedWriter bw = new BufferedWriter(fw);
-
+      String lineToWrite = String.format("%s,%d\n", "Total silence in given period: ", totalSilence);
+      bw.write(lineToWrite);
+      bw.close();
 //      boolean continueTimeStamps = true;
   //    while (continueTimeStamps) {
-        int i = 0;
+       /* int i = 0;
         while (i<silenceTimeStamps.size()) {
           //TODO: iterate through time stamps and print in %f,%f formatting, write to file using bw.write
           String lineToWrite = String.format("%s,%d,%s,%d\n", "Silence between periods: ", silenceTimeStamps.get(i), ", ", silenceTimeStamps.get(i + 1));
           bw.write(lineToWrite); //TODO: fill in content to be written (aka, timestamp pairs labelings)
           bw.close();
           i = i + 2;
-        }
+        }*/
   //   }
       } catch (IOException e) {
           e.printStackTrace();
@@ -569,7 +571,9 @@ public class SpeechActivity extends Activity
       final RecognizeCommands.RecognitionResult result =
           recognizeCommands.processLatestResults(outputScores[0], currentTime);
       lastProcessingTimeMs = new Date().getTime() - startTime;
-      //TODO: could i use the lastProcessingTimeMs so I can stay w/in just SpeechActivity instead of tracking silent time in RecognizeCommands?
+      //TODO: could i use the lastProcessingTimeMs so I can stay w/in just sA.java instead of tracking silent time in rC.java?
+      //TODO: or even better! use -- result.totalSilence
+
       runOnUiThread(
           new Runnable() {
             @Override
@@ -588,6 +592,8 @@ public class SpeechActivity extends Activity
                     //write csv file
 
                   }
+                  //getting the result from rC.java to get data from each run - then we will use this to write to the csv file
+                  totalSilence = result.totalSilence;
                 }
 
                 switch (labelIndex - 2) {

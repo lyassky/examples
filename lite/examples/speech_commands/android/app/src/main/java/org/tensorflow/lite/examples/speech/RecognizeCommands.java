@@ -43,7 +43,7 @@ public class RecognizeCommands {
 
   private static final String SILENCE_LABEL = "_silence_";
   private static final long MINIMUM_TIME_FRACTION = 4;
-//  public int totalSilence = 0;
+  public int totalSilence = 0;
 
 
   public RecognizeCommands(
@@ -71,11 +71,13 @@ public class RecognizeCommands {
     public final String foundCommand;
     public final float score;
     public final boolean isNewCommand;
+    public int totalSilence;
 
-    public RecognitionResult(String inFoundCommand, float inScore, boolean inIsNewCommand) {
+    public RecognitionResult(String inFoundCommand, float inScore, boolean inIsNewCommand, int tSilence) {
       foundCommand = inFoundCommand;
       score = inScore;
       isNewCommand = inIsNewCommand;
+      totalSilence = tSilence;
     }
   }
 
@@ -124,7 +126,7 @@ public class RecognizeCommands {
     if (howManyResults > 1) {
       final long timeSinceMostRecent = currentTimeMS - previousResults.getLast().first;
       if (timeSinceMostRecent < minimumTimeBetweenSamplesMs) {
-        return new RecognitionResult(previousTopLabel, previousTopLabelScore, false);
+        return new RecognitionResult(previousTopLabel, previousTopLabelScore, false, totalSilence);
       }
     }
 
@@ -155,7 +157,7 @@ public class RecognizeCommands {
     //        || (samplesDuration < (averageWindowDurationMs / MINIMUM_TIME_FRACTION))
     ) {
       Log.v("RecognizeResult", "Too few results");
-      return new RecognitionResult(previousTopLabel, 0.0f, false);
+      return new RecognitionResult(previousTopLabel, 0.0f, false, totalSilence);
     }
 
     // Calculate the average score across all the results in the window.
@@ -216,6 +218,6 @@ public class RecognizeCommands {
     } else {
       isNewCommand = false;
     }
-    return new RecognitionResult(currentTopLabel, currentTopScore, isNewCommand);
+    return new RecognitionResult(currentTopLabel, currentTopScore, isNewCommand, totalSilence);
   }
 }
