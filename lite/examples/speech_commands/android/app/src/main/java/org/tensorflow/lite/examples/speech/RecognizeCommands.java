@@ -43,6 +43,8 @@ public class RecognizeCommands {
 
   private static final String SILENCE_LABEL = "_silence_";
   private static final long MINIMUM_TIME_FRACTION = 4;
+//  public int totalSilence = 0;
+
 
   public RecognizeCommands(
       List<String> inLabels,
@@ -61,6 +63,7 @@ public class RecognizeCommands {
     previousTopLabelTime = Long.MIN_VALUE;
     previousTopLabelScore = 0.0f;
     minimumTimeBetweenSamplesMs = inMinimumTimeBetweenSamplesMS;
+
   }
 
   /** Holds information about what's been recognized. */
@@ -193,8 +196,14 @@ public class RecognizeCommands {
     */
 
     if (currentTopLabel.equals(SILENCE_LABEL)){
-      //add to silen
-      Log.d("New Silent timestamps", (timeSinceLastTop + " to " + currentTimeMS));
+      // need difference/both of (currentTimeMS - previousTopLabelTime)
+      int timeDifference = 0;
+      if (previousTopLabelTime>0) { // this ensures that we don't count the first previousTopLabelTime, which is negative max value first round)
+        timeDifference = ((int) currentTimeMS) - ((int) previousTopLabelTime);
+        totalSilence += timeDifference;
+      }
+
+      Log.d("New Silent timestamps", ("previous top label time: " + previousTopLabelTime + " to current time: " + currentTimeMS + " difference in MS: " + timeDifference + ", new total time silent: " + totalSilence));
       //TODO: add to silentTimeStamps
     }
 

@@ -106,6 +106,8 @@ public class SpeechActivity extends Activity
   boolean shouldContinueRecognition = true;
   private Thread recognitionThread;
   private final ReentrantLock recordingBufferLock = new ReentrantLock();
+  public int totalSilence = 0;
+
 
   private List<String> labels = new ArrayList<String>();
   private List<String> displayedLabels = new ArrayList<>();
@@ -252,6 +254,7 @@ public class SpeechActivity extends Activity
         // Start the recording and recognition threads.
         stopRecording();
         stopRecognition();
+
       }
     });
     /////////
@@ -566,6 +569,7 @@ public class SpeechActivity extends Activity
       final RecognizeCommands.RecognitionResult result =
           recognizeCommands.processLatestResults(outputScores[0], currentTime);
       lastProcessingTimeMs = new Date().getTime() - startTime;
+      //TODO: could i use the lastProcessingTimeMs so I can stay w/in just SpeechActivity instead of tracking silent time in RecognizeCommands?
       runOnUiThread(
           new Runnable() {
             @Override
