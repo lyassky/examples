@@ -4,6 +4,16 @@
 
 This app performs recognition of speech Commands on mobile, highlighting the spoken word.
 
+This a fork of the TensorFlow example repo. Edits and additional features made by @author Leah Yassky at the Temple University REU Site for Pervasive Computing for Smart Health (June/July 2019) in Dr. Chiu Tan's lab. Additional features include:
+* implements Start/Stop buttons which control the time of recording and analyzing audio data
+* records the number of times each word is said and outputs to CSV file
+* records the pauses (silence) in speech and records the start and stop time of each pause in a CSV file
+
+See below for 
+* how to build the demo using Android Studio
+* detailed description of files
+* notes on executing
+
 <!-- TODO(b/124116863): Add app screenshot. -->
 
 ## Build the demo using Android Studio
