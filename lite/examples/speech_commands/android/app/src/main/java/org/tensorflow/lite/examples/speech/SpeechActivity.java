@@ -152,6 +152,13 @@ public class SpeechActivity extends Activity
     return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
   }
 
+
+  //instantiate files
+  File root = Environment.getExternalStorageDirectory();
+  File file1 = new File(root, "speechResults.csv");
+  File file2 = new File(root, "silenceResults.csv");
+
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     // Set up the UI.
@@ -227,10 +234,10 @@ public class SpeechActivity extends Activity
     // set button onclick listeners
     /////////
 
-    // set OnClickListener for the start button to signal that the
-
+    // set OnClickListener for the start button to signal that the recording can begin
     final Button btnStart = (Button) findViewById(R.id.btnStart);
     btnStart.setOnClickListener(new View.OnClickListener() {
+      @Override
       public void onClick(View v) {
         // Start the recording and recognition threads.
         requestMicrophonePermission();
@@ -239,7 +246,8 @@ public class SpeechActivity extends Activity
     });
 
     final Button btnStop = (Button) findViewById(R.id.btnStop);
-    btnStart.setOnClickListener(new View.OnClickListener() {
+    btnStop.setOnClickListener(new View.OnClickListener() {
+      @Override
       public void onClick(View v) {
         // Start the recording and recognition threads.
         stopRecording();
@@ -248,9 +256,17 @@ public class SpeechActivity extends Activity
     });
     /////////
 
+
+    //instantiate files
+    File root = Environment.getExternalStorageDirectory();
+    File file1 = new File(root, "speechResults.csv");
+    File file2 = new File(root, "silenceResults.csv");
+
+
+
     apiSwitchCompat.setOnCheckedChangeListener(this);
 
-    //initialize the tally arraylist with 8 empty
+    //initialize the tally arraylist with 8 zeros
     for (int i = 0; i < 10; i++) {
       tally.add(0);
     }
@@ -318,6 +334,7 @@ public class SpeechActivity extends Activity
         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
       startRecording();
       startRecognition();
+      Log.e(LOG_TAG, "permissions requested");
     }
   }
 
@@ -347,11 +364,12 @@ public class SpeechActivity extends Activity
 
     //CSV FILE 1: writing the csv file that records the tally data
     try {
-      File root = Environment.getExternalStorageDirectory();
-      File file1 = new File(root, "speechResults.csv");
+      //where file instantiation used to be
       //File file = new File( "speechResults.csv");
       if (!file1.exists()) {  // if file doesnt exists, then create it
         file1.createNewFile();
+        Log.e(LOG_TAG, "file1 created");
+
       }
 
       FileWriter fw = new FileWriter(file1.getAbsoluteFile());
@@ -361,26 +379,28 @@ public class SpeechActivity extends Activity
       // yes no up down left right on off stop go
 
 
+
       String line0 = String.format("%s,%d\n", "Yes: ", tally.get(0));
       bw.write(line0);
-      String line1 = String.format("%s,%d\n", "No: ", tally.get(0));
+      String line1 = String.format("%s,%d\n", "No: ", tally.get(1));
       bw.write(line1);
-      String line2 = String.format("%s,%d\n", "Up: ", tally.get(0));
+      String line2 = String.format("%s,%d\n", "Up: ", tally.get(2));
       bw.write(line2);
-      String line3 = String.format("%s,%d\n", "Down: ", tally.get(0));
+      String line3 = String.format("%s,%d\n", "Down: ", tally.get(3));
       bw.write(line3);
-      String line4 = String.format("%s,%d\n", "Left: ", tally.get(0));
+      String line4 = String.format("%s,%d\n", "Left: ", tally.get(4));
       bw.write(line4);
-      String line5 = String.format("%s,%d\n", "Right: ", tally.get(0));
+      String line5 = String.format("%s,%d\n", "Right: ", tally.get(5));
       bw.write(line5);
-      String line6 = String.format("%s,%d\n", "On: ", tally.get(0));
+      String line6 = String.format("%s,%d\n", "On: ", tally.get(6));
       bw.write(line6);
-      String line7 = String.format("%s,%d\n", "Off: ", tally.get(0));
+      String line7 = String.format("%s,%d\n", "Off: ", tally.get(7));
       bw.write(line7);
-      String line8 = String.format("%s,%d\n", "Stop: ", tally.get(0));
+      String line8 = String.format("%s,%d\n", "Stop: ", tally.get(8));
       bw.write(line8);
-      String line9 = String.format("%s,%d\n", "Go: ", tally.get(0));
+      String line9 = String.format("%s,%d\n", "Go: ", tally.get(9));
       bw.write(line9);
+      Log.e(LOG_TAG, "wrote to tally:" + tally.get(0) + ", " + tally.get(1) + ", " + tally.get(2) + ", " + tally.get(3) + ", " + tally.get(4) + ", " + tally.get(5) + ", " + tally.get(6) + ", " + tally.get(7) + ", " + tally.get(8) + ", " + tally.get(9));
 
       bw.close();
 
@@ -393,8 +413,7 @@ public class SpeechActivity extends Activity
     //  listed as sets of two time stamps
     //  first time stamp is when the patient stopped talking, second is when they resume again
     try {
-      File root = Environment.getExternalStorageDirectory();
-      File file2 = new File(root, "silenceResults.csv");
+      //where file instantiation used to be
       //File file = new File( "speechResults.csv");
       if (!file2.exists()) {  // if file doesnt exists, then create it
         file2.createNewFile();
@@ -419,7 +438,9 @@ public class SpeechActivity extends Activity
 
     shouldContinue = false;
     recordingThread = null;
-    }
+    Log.e(LOG_TAG, "stop recording");
+
+  }
 
 
 
@@ -559,7 +580,7 @@ public class SpeechActivity extends Activity
                   if (labels.get(i).equals(result.foundCommand)) {
                     labelIndex = i;
                     tally.set(i, tally.get(i) + 1); //setting the tally for each result up one if it is in foundCommand
-                    Log.d("TALLY", Integer.toString(i));
+                    Log.d(LOG_TAG, "added to tally: " + Integer.toString(i));
                     //write csv file
 
                   }

@@ -97,6 +97,8 @@ public class RecognizeCommands {
     }
   }
 
+
+
   public RecognitionResult processLatestResults(float[] currentResults, long currentTimeMS) {
     if (currentResults.length != labelsCount) {
       throw new RuntimeException(
@@ -191,8 +193,9 @@ public class RecognizeCommands {
     */
 
     if (currentTopLabel.equals(SILENCE_LABEL)){
+      //add to silen
       Log.d("New Silent timestamps", (timeSinceLastTop + " to " + currentTimeMS));
-
+      //TODO: add to silentTimeStamps
     }
 
     boolean isNewCommand;
