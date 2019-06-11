@@ -156,9 +156,14 @@ public class SpeechActivity extends Activity
 
 
   //instantiate files
-  File root = Environment.getExternalStorageDirectory();
+  // need to check if there is available storage space? see code on:
+  // https://developer.android.com/training/data-storage/files#CheckExternalAvail
+  File root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+
   File file1 = new File(root, "speechResults.csv");
   File file2 = new File(root, "silenceResults.csv");
+  long beginRecording = System.currentTimeMillis();
+
 
 
   @Override
@@ -361,6 +366,8 @@ public class SpeechActivity extends Activity
   }
 
   public synchronized void stopRecording() {
+    long endRecording = System.currentTimeMillis();
+    long timeRecording = endRecording - beginRecording;
     if (recordingThread == null) {
       return;
     }
@@ -421,11 +428,16 @@ public class SpeechActivity extends Activity
       if (!file2.exists()) {  // if file doesnt exists, then create it
         file2.createNewFile();
       }
+
       FileWriter fw = new FileWriter(file2.getAbsoluteFile());
       BufferedWriter bw = new BufferedWriter(fw);
       String lineToWrite = String.format("%s,%d\n", "Total silence in given period: ", totalSilence);
       bw.write(lineToWrite);
+      String totalTime = String.format("%s,%d\n", "Total time recording: ", timeRecording);
+      bw.write(totalTime);
       bw.close();
+
+//    THIS PART NOT NECESSARY ANYMORE: but keeping until output style is set.
 //      boolean continueTimeStamps = true;
   //    while (continueTimeStamps) {
        /* int i = 0;

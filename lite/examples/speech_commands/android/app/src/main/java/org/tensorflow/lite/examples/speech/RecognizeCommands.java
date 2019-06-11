@@ -126,7 +126,7 @@ public class RecognizeCommands {
     if (howManyResults > 1) {
       final long timeSinceMostRecent = currentTimeMS - previousResults.getLast().first;
       if (timeSinceMostRecent < minimumTimeBetweenSamplesMs) {
-        return new RecognitionResult(previousTopLabel, previousTopLabelScore, false, totalSilence);
+        return new RecognitionResult(previousTopLabel, previousTopLabelScore, false, totalSilence); //TODO: if want to change output data, change here (1/2): totalSilence to array of all timestamps, or array or all difference in MS data, etc.
       }
     }
 
@@ -191,10 +191,10 @@ public class RecognizeCommands {
       timeSinceLastTop = currentTimeMS - previousTopLabelTime;
     }
 
-    /*
-    TODO: if currentTopLabel is SILENCE_LABEL, then return PreviousTopLabelTime
-    TODO: (or another time label) to currentTimeMS as a period of time, or do the
-    TODO: difference between them and log that as a period of SILENCE:
+    /*  Notes on next section:
+    if currentTopLabel is SILENCE_LABEL, then return PreviousTopLabelTime
+    (or another time label) to currentTimeMS as a period of time, or do the
+    difference between them and log that as a period of SILENCE:
     */
 
     if (currentTopLabel.equals(SILENCE_LABEL)){
@@ -202,11 +202,13 @@ public class RecognizeCommands {
       int timeDifference = 0;
       if (previousTopLabelTime>0) { // this ensures that we don't count the first previousTopLabelTime, which is negative max value first round)
         timeDifference = ((int) currentTimeMS) - ((int) previousTopLabelTime);
-        totalSilence += timeDifference;
+        if (timeDifference < 200) { // outlier prevention: this ensures that stopped time does not enter recorded data
+                                    // i.e.: previous top label time: 1560198602819 to current time: 1560198617254 difference in MS: 14435, new total time silent: 1836 >>> 14435 is way too big for any period, so this is not added to the total time silent.
+          totalSilence += timeDifference;
+        }
       }
 
       Log.d("New Silent timestamps", ("previous top label time: " + previousTopLabelTime + " to current time: " + currentTimeMS + " difference in MS: " + timeDifference + ", new total time silent: " + totalSilence));
-      //TODO: add to silentTimeStamps
     }
 
     boolean isNewCommand;
@@ -218,6 +220,6 @@ public class RecognizeCommands {
     } else {
       isNewCommand = false;
     }
-    return new RecognitionResult(currentTopLabel, currentTopScore, isNewCommand, totalSilence);
+    return new RecognitionResult(currentTopLabel, currentTopScore, isNewCommand, totalSilence); //TODO: if want to change output data, change here (2/2): totalSilence to array of all timestamps, or array or all difference in MS data, etc.
   }
 }
