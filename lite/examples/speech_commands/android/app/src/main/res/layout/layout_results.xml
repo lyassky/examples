@@ -66,5 +66,22 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <TextView
+        android:id="@+id/labelLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Left:"
+        app:layout_constraintStart_toStartOf="@+id/labelRight"
+        app:layout_constraintTop_toBottomOf="@+id/labelRight" />
+
+    <TextView
+        android:id="@+id/countLeft"
+        android:layout_width="27dp"
+        android:layout_height="16dp"
+        android:text="--"
+        app:layout_constraintStart_toStartOf="@+id/countNo"
+        app:layout_constraintTop_toTopOf="@+id/labelLeft" />
+
 
 </android.support.constraint.ConstraintLayout>

@@ -32,6 +32,7 @@ the RecognizeCommands helper class.
 package org.tensorflow.lite.examples.speech;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
@@ -45,6 +46,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.View;
@@ -54,6 +56,8 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -70,6 +74,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import org.tensorflow.lite.Interpreter;
+
 
 
 /**
@@ -108,7 +113,6 @@ public class SpeechActivity extends Activity
   private final ReentrantLock recordingBufferLock = new ReentrantLock();
   public int totalSilence = 0;
 
-
   private List<String> labels = new ArrayList<String>();
   private List<String> displayedLabels = new ArrayList<>();
   private RecognizeCommands recognizeCommands = null;
@@ -118,11 +122,11 @@ public class SpeechActivity extends Activity
   private List<Integer> tally = new ArrayList<>(); // list of counts for how many times each word was said, indexed as words are shown on screen
   private List<Float> silenceTimeStamps = new ArrayList<>(); // pairs of timestamps (time silence started, time silence ended)
 
-
   private Interpreter tfLite;
   private ImageView bottomSheetArrowImageView;
   private Button btnStop;
   private Button btnStart;
+  private Button btnResults;
   private TextView yesTextView,
       noTextView,
       upTextView,
@@ -142,6 +146,8 @@ public class SpeechActivity extends Activity
   private TextView selectedTextView = null;
   private HandlerThread backgroundThread;
   private Handler backgroundHandler;
+  Intent intent;
+
 
   /** Memory-map the model file in Assets. */
   private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
@@ -154,14 +160,19 @@ public class SpeechActivity extends Activity
     return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
   }
 
-
   //instantiate files
   // need to check if there is available storage space? see code on:
   // https://developer.android.com/training/data-storage/files#CheckExternalAvail
-  File root = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+  File rootFolder = Environment.getExternalStorageDirectory();
+  //Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
 
-  File file1 = new File(root, "speechResults.csv");
-  File file2 = new File(root, "silenceResults.csv");
+
+  File file1 = new File(rootFolder, "speechResults.csv");
+  File file2 = new File(rootFolder, "silenceResults.csv");
+  //Toast.makeText(getApplicationContext(), "Details Saved in "+file1.getAbsolutePath(),Toast.LENGTH_SHORT).show();
+  //Toast.makeText(getApplicationContext(), "Details Saved in "+file1.getAbsolutePath(),Toast.LENGTH_SHORT).show();
+  Log.d("LOG_FILE", file1.getAbsolutePath());
+
   long beginRecording = System.currentTimeMillis();
 
 
@@ -262,13 +273,24 @@ public class SpeechActivity extends Activity
 
       }
     });
+
+
+    final Button btnResults = (Button) findViewById(R.id.btnResults);
+    btnResults.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        // set intent to new screen.
+
+        Log.d(LOG_TAG, file1.getPath());
+        //getFilesDir(file2);
+        //
+
+      }
+    });
     /////////
 
 
-    //instantiate files
-    File root = Environment.getExternalStorageDirectory();
-    File file1 = new File(root, "speechResults.csv");
-    File file2 = new File(root, "silenceResults.csv");
+
 
 
 
@@ -372,6 +394,10 @@ public class SpeechActivity extends Activity
       return;
     }
 
+
+
+
+
     //CSV FILE 1: writing the csv file that records the tally data
     try {
       //where file instantiation used to be
@@ -379,15 +405,26 @@ public class SpeechActivity extends Activity
       if (!file1.exists()) {  // if file doesnt exists, then create it
         file1.createNewFile();
         Log.e(LOG_TAG, "file1 created");
-
       }
+
+      ActivityCompat.requestPermissions(SpeechActivity.this, new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},23);
+      //instantiate files
+      // need to check if there is available storage space? see code on:
+      // https://developer.android.com/training/data-storage/files#CheckExternalAvail
+      File rootFolder = Environment.getExternalStorageDirectory();
+      //Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
+
+      //instantiate the two files
+      File file1 = new File(rootFolder, "speechResults.csv");
+      File file2 = new File(rootFolder, "silenceResults.csv");
+      Toast.makeText(getApplicationContext(), "Details Saved in "+file1.getAbsolutePath(),Toast.LENGTH_SHORT).show();
+
 
       FileWriter fw = new FileWriter(file1.getAbsoluteFile());
       BufferedWriter bw = new BufferedWriter(fw);
 
       //fill in content to be written (aka, parsed tally arraylist with appropriate labelings)
       // yes no up down left right on off stop go
-
 
 
       String line0 = String.format("%s,%d\n", "Yes: ", tally.get(0));
@@ -414,32 +451,26 @@ public class SpeechActivity extends Activity
 
       bw.close();
 
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+      //CSV FILE 2: writing the csv file that records the silence data.
+      //File Format:
+      //  listed as sets of two time stamps
+      //  first time stamp is when the patient stopped talking, second is when they resume again
 
-    //CSV FILE 2: writing the csv file that records the silence data.
-    //File Format:
-    //  listed as sets of two time stamps
-    //  first time stamp is when the patient stopped talking, second is when they resume again
-    try {
-      //where file instantiation used to be
-      //File file = new File( "speechResults.csv");
       if (!file2.exists()) {  // if file doesnt exists, then create it
         file2.createNewFile();
       }
 
-      FileWriter fw = new FileWriter(file2.getAbsoluteFile());
-      BufferedWriter bw = new BufferedWriter(fw);
-      String lineToWrite = String.format("%s,%d\n", "Total silence in given period: ", totalSilence);
-      bw.write(lineToWrite);
-      String totalTime = String.format("%s,%d\n", "Total time recording: ", timeRecording);
-      bw.write(totalTime);
-      bw.close();
+      FileWriter fw2 = new FileWriter(file2.getAbsoluteFile());
+      BufferedWriter bw2 = new BufferedWriter(fw2);
+      String lineToWrite = String.format("%s,%d\n", "Total silence in given period (in MS): ", totalSilence);
+      bw2.write(lineToWrite);
+      String totalTime = String.format("%s,%d\n", "Total time recording (in MS): ", timeRecording);
+      bw2.write(totalTime);
+      bw2.close();
 
 //    THIS PART NOT NECESSARY ANYMORE: but keeping until output style is set.
 //      boolean continueTimeStamps = true;
-  //    while (continueTimeStamps) {
+      //    while (continueTimeStamps) {
        /* int i = 0;
         while (i<silenceTimeStamps.size()) {
           //TODO: iterate through time stamps and print in %f,%f formatting, write to file using bw.write
@@ -448,10 +479,12 @@ public class SpeechActivity extends Activity
           bw.close();
           i = i + 2;
         }*/
-  //   }
-      } catch (IOException e) {
-          e.printStackTrace();
-        }
+      //   }
+
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
     shouldContinue = false;
     recordingThread = null;
