@@ -48,3 +48,7 @@ The percentage displayed is average command recognition over a window duration (
 ### Additional Note
 _Please do not delete the assets folder content_. If you explicitly deleted the files, then please choose *Build*->*Rebuild* from menu to re-download the deleted model files into assets folder.
 
+
+## Notes on files
+
+
